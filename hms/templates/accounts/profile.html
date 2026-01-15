@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile - HMS{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="page-header mb-4">
+                <h1 class="page-title">My Profile</h1>
+                <p class="page-subtitle">Manage your account settings</p>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="doctor-avatar me-4" style="width: 100px; height: 100px; font-size: 2.5rem;">
+                            {{ user.first_name.0|upper }}{{ user.last_name.0|upper }}
+                        </div>
+                        <div>
+                            <h3 class="mb-1">
+                                {% if user.is_doctor %}Dr. {% endif %}{{ user.get_full_name|default:user.email }}
+                            </h3>
+                            <p class="text-muted mb-0">{{ user.email }}</p>
+                            <span class="badge badge-primary mt-2">
+                                {{ user.role|title }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">First Name</label>
+                                {{ form.first_name }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Last Name</label>
+                                {{ form.last_name }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone Number</label>
+                                {{ form.phone_number }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Profile Picture</label>
+                                {{ form.avatar }}
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Google Calendar Integration -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fab fa-google me-2"></i> Google Calendar Integration
+                </div>
+                <div class="card-body">
+                    {% if user.has_google_calendar_connected %}
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="mb-1 text-success">
+                                <i class="fas fa-check-circle me-2"></i> Connected
+                            </p>
+                            <p class="text-muted mb-0 small">
+                                Your appointments will be synced with Google Calendar
+                            </p>
+                        </div>
+                        <form method="post" action="{% url 'calendar:disconnect' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-unlink me-1"></i> Disconnect
+                            </button>
+                        </form>
+                    </div>
+                    {% else %}
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="mb-1 text-muted">
+                                <i class="fas fa-times-circle me-2"></i> Not Connected
+                            </p>
+                            <p class="text-muted mb-0 small">
+                                Connect to sync your appointments with Google Calendar
+                            </p>
+                        </div>
+                        <a href="{% url 'calendar:connect' %}" class="btn btn-primary btn-sm">
+                            <i class="fab fa-google me-1"></i> Connect Google Calendar
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="mt-4">
+                {% if user.is_doctor %}
+                <a href="{% url 'doctors:profile_setup' %}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-stethoscope me-1"></i> Doctor Profile Settings
+                </a>
+                {% elif user.is_patient %}
+                <a href="{% url 'patients:profile_setup' %}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-notes-medical me-1"></i> Medical Profile
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

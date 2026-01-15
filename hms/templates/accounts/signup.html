@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sign Up - HMS{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card animate-fade-in-up">
+        <div class="auth-logo">
+            <i class="fas fa-hospital-alt"></i>
+            <h1 class="gradient-text">HMS</h1>
+        </div>
+
+        <div class="auth-title">
+            <h2>Create Account</h2>
+            <p>Join HMS to manage your healthcare journey</p>
+        </div>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger mb-4">
+                {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Role Selection -->
+            <div class="mb-4">
+                <label class="form-label">I am a</label>
+                <div class="role-selector">
+                    <label class="role-option" id="role-patient">
+                        <input type="radio" name="role" value="patient" {% if form.role.value == 'patient' or not form.role.value %}checked{% endif %}>
+                        <i class="fas fa-user"></i>
+                        <span>Patient</span>
+                    </label>
+                    <label class="role-option" id="role-doctor">
+                        <input type="radio" name="role" value="doctor" {% if form.role.value == 'doctor' %}checked{% endif %}>
+                        <i class="fas fa-user-md"></i>
+                        <span>Doctor</span>
+                    </label>
+                </div>
+
+                <div class="row g-3">
+                    <!-- First Name -->
+                    <div class="col-md-6">
+                        <label for="id_first_name" class="form-label">First Name</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                        <div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Last Name -->
+                    <div class="col-md-6">
+                        <label for="id_last_name" class="form-label">Last Name</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                        <div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div class="mb-3 mt-3">
+                    <label for="id_email" class="form-label">Email Address</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Phone Number -->
+                <div class="mb-3">
+                    <label for="id_phone_number" class="form-label">Phone Number <small
+                            class="text-muted">(Optional)</small></label>
+                    {{ form.phone_number }}
+                </div>
+
+                <!-- Password -->
+                <div class="mb-3">
+                    <label for="id_password1" class="form-label">Password</label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                    <div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="mb-4">
+                    <label for="id_password2" class="form-label">Confirm Password</label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                    <div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 btn-lg mb-4">
+                    <i class="fas fa-user-plus me-2"></i> Create Account
+                </button>
+
+                <p class="text-center text-muted mb-0">
+                    Already have an account? <a href="{% url 'accounts:login' %}">Login here</a>
+                </p>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const roleOptions = document.querySelectorAll('.role-option');
+
+        roleOptions.forEach(option => {
+            const radio = option.querySelector('input[type="radio"]');
+
+            // Set initial active state
+            if (radio.checked) {
+                option.classList.add('active');
+            }
+
+            option.addEventListener('click', function () {
+                roleOptions.forEach(opt => opt.classList.remove('active'));
+                this.classList.add('active');
+                radio.checked = true;
+            });
+        });
+    });
+</script>
+{% endblock %}

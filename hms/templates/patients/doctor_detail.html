@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Dr. {{ doctor.user.get_full_name }} - HMS{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Doctor Header -->
+    <div class="card mb-5 border-0 shadow-sm"
+        style="background: linear-gradient(to right, #ffffff, var(--primary-50));">
+        <div class="card-body p-4 p-lg-5">
+            <div class="row align-items-center">
+                <div class="col-md-3 text-center mb-4 mb-md-0">
+                    <div class="mx-auto rounded-circle d-flex align-items-center justify-content-center bg-white shadow-sm border border-2 border-primary"
+                        style="width: 150px; height: 150px; font-size: 3.5rem; color: var(--primary-600); font-weight: bold;">
+                        {{ doctor.user.first_name.0 }}{{ doctor.user.last_name.0 }}
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                        <div>
+                            <h1 class="display-6 fw-bold mb-1">Dr. {{ doctor.user.get_full_name }}</h1>
+                            <p class="h5 text-primary mb-3">{{ doctor.get_specialization_display }}</p>
+
+                            <div class="d-flex flex-wrap gap-4 text-muted mb-3">
+                                <div><i class="fas fa-graduation-cap me-2 text-primary"></i>{{ doctor.qualification }}
+                                </div>
+                                <div><i class="fas fa-briefcase me-2 text-primary"></i>{{ doctor.experience_years }}
+                                    Years Experience</div>
+                                <div><i class="fas fa-money-bill-wave me-2 text-primary"></i>₹{{ doctor.consultation_fee
+                                    }} / Visit</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if doctor.bio %}
+                    <div class="mt-3">
+                        <h6 class="fw-bold text-uppercase text-muted small">About</h6>
+                        <p class="mb-0">{{ doctor.bio }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Availability Slots -->
+    <h3 class="mb-4">Available Appointments</h3>
+
+    {% if slots_by_date %}
+    <div class="row g-4">
+        {% for date, date_data in slots_by_date.items %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-calendar-day me-2 text-primary"></i>{{
+                        date_data.date_display }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for slot in date_data.slots %}
+                        <a href="{% url 'appointments:book_appointment' slot.id %}"
+                            class="time-slot text-decoration-none">
+                            <i class="far fa-clock"></i>
+                            {{ slot.start_time|time:"g:i A" }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5 bg-light rounded-xl">
+        <i class="fas fa-calendar-times fa-3x text-muted mb-3 opacity-50"></i>
+        <h5>No Available Slots</h5>
+        <p class="text-muted mb-0">This doctor generally has availability soon. Please check back later.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

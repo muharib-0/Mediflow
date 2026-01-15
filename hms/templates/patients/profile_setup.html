@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Medical Profile - HMS{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="page-header">
+                <h1 class="page-title">Medical Profile</h1>
+                <p class="page-subtitle">Keep your medical information up to date for better care</p>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Date of Birth</label>
+                                {{ form.date_of_birth }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Blood Group</label>
+                                {{ form.blood_group }}
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Address</label>
+                                {{ form.address }}
+                            </div>
+
+                            <h5 class="mt-4 mb-3 text-primary border-bottom pb-2">Emergency Contact</h5>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Contact Name</label>
+                                {{ form.emergency_contact_name }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Contact Number</label>
+                                {{ form.emergency_contact }}
+                            </div>
+
+                            <h5 class="mt-4 mb-3 text-primary border-bottom pb-2">Medical History</h5>
+
+                            <div class="col-12">
+                                <label class="form-label">Existing Conditions / History</label>
+                                {{ form.medical_history }}
+                                <small class="form-text text-muted">Please list any chronic conditions, surgeries, or
+                                    major illnesses.</small>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Allergies</label>
+                                {{ form.allergies }}
+                                <small class="form-text text-muted">List any drug or food allergies.</small>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i> Save Profile
+                            </button>
+                            <a href="{% url 'patients:dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

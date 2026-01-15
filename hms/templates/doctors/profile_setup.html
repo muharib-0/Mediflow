@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Doctor Profile Setup - HMS{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="page-header">
+                <h1 class="page-title">Doctor Profile</h1>
+                <p class="page-subtitle">Set up your professional profile to help patients know more about you</p>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Specialization</label>
+                                {{ form.specialization }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Qualification</label>
+                                {{ form.qualification }}
+                                <small class="form-text text-muted">e.g., MBBS, MD, MS</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Years of Experience</label>
+                                {{ form.experience_years }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Consultation Fee (₹)</label>
+                                {{ form.consultation_fee }}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">About Me</label>
+                                {{ form.bio }}
+                                <small class="form-text text-muted">Tell patients about your experience and
+                                    expertise</small>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    {{ form.is_available }}
+                                    <label class="form-check-label ms-2" for="id_is_available">
+                                        Available for Appointments
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i> Save Profile
+                            </button>
+                            <a href="{% url 'doctors:dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

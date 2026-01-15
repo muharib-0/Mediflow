@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}HMS - Your Healthcare Partner{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <div class="hero-content animate-fade-in-up">
+                    <h1 class="hero-title">
+                        Your Health, <br>
+                        <span style="color: rgba(255,255,255,0.9);">Our Priority</span>
+                    </h1>
+                    <p class="hero-subtitle">
+                        Connect with top healthcare professionals, book appointments seamlessly,
+                        and manage your health journey all in one place.
+                    </p>
+                    <div class="hero-buttons">
+                        <a href="{% url 'accounts:signup' %}" class="btn btn-hero">
+                            <i class="fas fa-user-plus me-2"></i> Get Started
+                        </a>
+                        <a href="{% url 'accounts:login' %}" class="btn btn-hero-outline">
+                            <i class="fas fa-sign-in-alt me-2"></i> Login
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="text-center">
+                    <img src="https://illustrations.popsy.co/violet/doctor.svg" alt="Healthcare Illustration"
+                        style="max-width: 100%; height: auto;">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5" style="background: var(--gray-50);">
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h2 class="mb-3">Why Choose <span class="gradient-text">HMS</span>?</h2>
+            <p class="text-muted">Experience healthcare management like never before</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 text-center p-4">
+                    <div class="card-body">
+                        <div class="stat-icon primary mx-auto mb-4">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <h4 class="mb-3">Easy Booking</h4>
+                        <p class="text-muted">
+                            Book appointments with your preferred doctors in just a few clicks.
+                            No more waiting on phone calls.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 text-center p-4">
+                    <div class="card-body">
+                        <div class="stat-icon secondary mx-auto mb-4">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <h4 class="mb-3">Expert Doctors</h4>
+                        <p class="text-muted">
+                            Connect with qualified healthcare professionals across
+                            multiple specializations.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 text-center p-4">
+                    <div class="card-body">
+                        <div class="stat-icon accent mx-auto mb-4">
+                            <i class="fab fa-google"></i>
+                        </div>
+                        <h4 class="mb-3">Calendar Sync</h4>
+                        <p class="text-muted">
+                            Sync your appointments with Google Calendar.
+                            Never miss an appointment again.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-5">
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h2 class="mb-3">How It <span class="gradient-text">Works</span></h2>
+            <p class="text-muted">Simple steps to get started</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-3 text-center">
+                <div class="rounded-circle bg-gradient-primary text-white d-inline-flex align-items-center justify-content-center mb-4"
+                    style="width: 80px; height: 80px; font-size: 2rem; font-weight: 700;">1</div>
+                <h5>Sign Up</h5>
+                <p class="text-muted small">Create your account as a patient or doctor</p>
+            </div>
+            <div class="col-md-3 text-center">
+                <div class="rounded-circle bg-gradient-secondary text-white d-inline-flex align-items-center justify-content-center mb-4"
+                    style="width: 80px; height: 80px; font-size: 2rem; font-weight: 700;">2</div>
+                <h5>Find Doctors</h5>
+                <p class="text-muted small">Browse doctors by specialization</p>
+            </div>
+            <div class="col-md-3 text-center">
+                <div class="rounded-circle text-white d-inline-flex align-items-center justify-content-center mb-4"
+                    style="width: 80px; height: 80px; font-size: 2rem; font-weight: 700; background: var(--gradient-accent);">
+                    3</div>
+                <h5>Book Slot</h5>
+                <p class="text-muted small">Choose an available time slot</p>
+            </div>
+            <div class="col-md-3 text-center">
+                <div class="rounded-circle text-white d-inline-flex align-items-center justify-content-center mb-4"
+                    style="width: 80px; height: 80px; font-size: 2rem; font-weight: 700; background: var(--gradient-hero);">
+                    4</div>
+                <h5>Get Confirmation</h5>
+                <p class="text-muted small">Receive email and calendar updates</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5" style="background: var(--gradient-dark);">
+    <div class="container py-5 text-center">
+        <h2 class="text-white mb-4">Ready to Get Started?</h2>
+        <p class="text-muted mb-4" style="max-width: 600px; margin: 0 auto;">
+            Join thousands of patients and doctors who trust HMS for their healthcare scheduling needs.
+        </p>
+        <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-rocket me-2"></i> Create Your Account
+        </a>
+    </div>
+</section>
+{% endblock %}

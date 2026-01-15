@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Appointment Details - HMS{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Back
+                </a>
+                <h4 class="mb-0">Appointment #{{ appointment.id }}</h4>
+            </div>
+
+            <div class="card shadow-sm border-0 rounded-xl overflow-hidden">
+                <!-- Status Banner -->
+                <div
+                    class="p-3 text-center {% if appointment.status == 'confirmed' %}bg-success text-white{% elif appointment.status == 'cancelled' %}bg-danger text-white{% else %}bg-secondary text-white{% endif %}">
+                    <h5 class="mb-0 text-uppercase fw-bold">{{ appointment.get_status_display }}</h5>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <div class="row g-4 mb-5">
+                        <div class="col-md-6 border-end-md">
+                            <h6 class="text-muted text-uppercase small fw-bold mb-3">Appointment Info</h6>
+                            <div class="mb-3">
+                                <div class="text-muted small">Date & Time</div>
+                                <h5 class="mb-0">{{ appointment.availability.date|date:"l, F d, Y" }}</h5>
+                                <div class="text-primary fw-bold">{{ appointment.availability.start_time|time:"g:i A" }}
+                                    - {{ appointment.availability.end_time|time:"g:i A" }}</div>
+                            </div>
+                            <div>
+                                <div class="text-muted small">Location</div>
+                                <div class="fw-bold">Virtual Consultation</div>
+                                <small class="text-muted">Link will be shared before appointment</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6 ps-md-4">
+                            <h6 class="text-muted text-uppercase small fw-bold mb-3">Participants</h6>
+                            <div class="mb-3">
+                                <div class="text-muted small">Doctor</div>
+                                <div class="d-flex align-items-center mt-1">
+                                    <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center me-2"
+                                        style="width: 32px; height: 32px;">
+                                        <i class="fas fa-user-md text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">Dr. {{ appointment.availability.doctor.get_full_name }}
+                                        </div>
+                                        <div class="small text-muted">{{
+                                            appointment.availability.doctor.doctor_profile.get_specialization_display }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-muted small">Patient</div>
+                                <div class="d-flex align-items-center mt-1">
+                                    <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center me-2"
+                                        style="width: 32px; height: 32px;">
+                                        <i class="fas fa-user text-secondary"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ appointment.patient.get_full_name }}</div>
+                                        <div class="small text-muted">{{ appointment.patient.email }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if appointment.reason %}
+                    <div class="bg-light p-4 rounded-xl mb-4">
+                        <h6 class="fw-bold mb-2">Reason for Visit</h6>
+                        <p class="mb-0 text-muted">{{ appointment.reason }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between align-items-center pt-4 border-top">
+                        <div class="text-muted small">
+                            Booked on {{ appointment.created_at|date:"M d, Y at g:i A" }}
+                        </div>
+
+                        {% if appointment.status == 'confirmed' and user == appointment.patient %}
+                        <a href="{% url 'appointments:cancel_appointment' appointment.id %}"
+                            class="btn btn-outline-danger">
+                            Cancel Appointment
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

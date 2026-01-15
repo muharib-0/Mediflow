@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}My Appointments - HMS{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="page-header">
+        <h1 class="page-title">My Appointments</h1>
+        <p class="page-subtitle">Track your visits and scheduled consultations</p>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-pills mb-4" id="appointmentTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" id="upcoming-tab" data-bs-toggle="pill" data-bs-target="#upcoming"
+                type="button">
+                <i class="fas fa-calendar-alt me-1"></i> Upcoming ({{ upcoming|length }})
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="past-tab" data-bs-toggle="pill" data-bs-target="#past" type="button">
+                <i class="fas fa-history me-1"></i> Past ({{ past|length }})
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="cancelled-tab" data-bs-toggle="pill" data-bs-target="#cancelled" type="button">
+                <i class="fas fa-ban me-1"></i> Cancelled ({{ cancelled|length }})
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- Upcoming -->
+        <div class="tab-pane fade show active" id="upcoming">
+            {% if upcoming %}
+            <div class="row g-4">
+                {% for appointment in upcoming %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-primary border-opacity-25 shadow-sm">
+                        <div class="card-body">
+                            <!-- Doctor Info -->
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3"
+                                    style="width: 48px; height: 48px;">
+                                    <i class="fas fa-user-md fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h5 class="card-title mb-0">Dr. {{ appointment.doctor.get_full_name }}</h5>
+                                    <small class="text-muted">{{
+                                        appointment.doctor.doctor_profile.get_specialization_display }}</small>
+                                </div>
+                            </div>
+
+                            <!-- Date & Time -->
+                            <div class="bg-light rounded p-3 mb-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted"><i class="fas fa-calendar me-2"></i>Date</span>
+                                    <span class="fw-bold">{{ appointment.availability.date|date:"D, M d, Y" }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted"><i class="fas fa-clock me-2"></i>Time</span>
+                                    <span class="fw-bold">{{ appointment.availability.start_time|time:"g:i A" }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'appointments:appointment_detail' appointment.id %}"
+                                    class="btn btn-outline-primary btn-sm">View Details</a>
+                                <a href="{% url 'appointments:cancel_appointment' appointment.id %}"
+                                    class="btn btn-outline-danger btn-sm">Cancel Booking</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <img src="https://illustrations.popsy.co/gray/calendar.svg" alt="No appointments"
+                    style="height: 150px; opacity: 0.6;">
+                <h4 class="mt-4 text-muted">No Upcoming Appointments</h4>
+                <p class="text-muted mb-4">You have no scheduled visits at the moment.</p>
+                <a href="{% url 'patients:browse_doctors' %}" class="btn btn-primary">Book an Appointment</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Past -->
+        <div class="tab-pane fade" id="past">
+            {% if past %}
+            <div class="list-group">
+                {% for appointment in past %}
+                <a href="{% url 'appointments:appointment_detail' appointment.id %}"
+                    class="list-group-item list-group-item-action d-flex align-items-center justify-content-between p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-light rounded p-2 me-3 text-center" style="min-width: 60px;">
+                            <div class="fw-bold text-muted">{{ appointment.availability.date|date:"d" }}</div>
+                            <div class="small text-uppercase text-muted">{{ appointment.availability.date|date:"M" }}
+                            </div>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Dr. {{ appointment.doctor.get_full_name }}</h6>
+                            <small class="text-muted">{{ appointment.doctor.doctor_profile.get_specialization_display
+                                }}</small>
+                        </div>
+                    </div>
+                    <span class="badge bg-secondary">Completed</span>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-muted">No past appointments found.</div>
+            {% endif %}
+        </div>
+
+        <!-- Cancelled -->
+        <div class="tab-pane fade" id="cancelled">
+            {% if cancelled %}
+            <div class="list-group">
+                {% for appointment in cancelled %}
+                <div
+                    class="list-group-item list-group-item-action d-flex align-items-center justify-content-between p-3 bg-light">
+                    <div class="d-flex align-items-center opacity-75">
+                        <div class="bg-white rounded p-2 me-3 text-center border" style="min-width: 60px;">
+                            <div class="fw-bold text-muted">{{ appointment.availability.date|date:"d" }}</div>
+                            <div class="small text-uppercase text-muted">{{ appointment.availability.date|date:"M" }}
+                            </div>
+                        </div>
+                        <div>
+                            <h6 class="mb-1 text-decoration-line-through">Dr. {{ appointment.doctor.get_full_name }}
+                            </h6>
+                            <small class="text-muted">Cancelled on {{ appointment.cancelled_at|date:"M d, Y" }}</small>
+                        </div>
+                    </div>
+                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger">Cancelled</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-muted">No cancelled appointments.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

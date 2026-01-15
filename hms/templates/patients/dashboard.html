@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Patient Dashboard - HMS{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="page-header">
+        <h1 class="page-title">
+            Hello, {{ request.user.first_name }}! 👋
+        </h1>
+        <p class="page-subtitle">Manage your health and upcoming appointments</p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon primary">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="stat-value">{{ upcoming_appointments|length }}</div>
+                <div class="stat-label">Upcoming Appointments</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card secondary">
+                <div class="stat-icon secondary">
+                    <i class="fas fa-history"></i>
+                </div>
+                <div class="stat-value">{{ total_appointments }}</div>
+                <div class="stat-label">Total Visits</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card accent">
+                <div class="stat-icon accent">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <div class="stat-value">{{ featured_doctors|length }}+</div>
+                <div class="stat-label">Doctors Available</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Upcoming Appointments -->
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-calendar-alt me-2 text-primary"></i>Your Schedule</span>
+                    <a href="{% url 'patients:my_appointments' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_appointments %}
+                    <div class="d-flex flex-column gap-3">
+                        {% for appointment in upcoming_appointments %}
+                        <div class="appointment-card">
+                            <div class="appointment-date">
+                                <div class="appointment-date-day">{{ appointment.availability.date|date:"d" }}</div>
+                                <div class="appointment-date-month">{{ appointment.availability.date|date:"M" }}</div>
+                            </div>
+                            <div class="appointment-info">
+                                <div class="appointment-title">Dr. {{ appointment.doctor.get_full_name }}</div>
+                                <div class="doctor-specialty text-start mb-1" style="font-size: 0.8rem;">
+                                    {{ appointment.doctor.doctor_profile.get_specialization_display }}
+                                </div>
+                                <div class="appointment-time">
+                                    <i class="fas fa-clock"></i>
+                                    {{ appointment.availability.start_time|time:"g:i A" }} - {{
+                                    appointment.availability.end_time|time:"g:i A" }}
+                                </div>
+                            </div>
+                            <div class="d-flex flex-column gap-2 text-end">
+                                <span class="badge badge-primary">{{ appointment.availability.date|date:"D" }}</span>
+                                <a href="{% url 'appointments:appointment_detail' appointment.id %}"
+                                    class="btn btn-sm btn-link p-0 text-decoration-none">Details</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-calendar-plus fa-3x mb-3" style="opacity: 0.3;"></i>
+                        <h5>No Upcoming Appointments</h5>
+                        <p class="mb-4">You haven't booked any appointments yet.</p>
+                        <a href="{% url 'patients:browse_doctors' %}" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i> Find a Doctor
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Featured Doctors -->
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-user-md me-2 text-secondary"></i>Top Doctors</span>
+                    <a href="{% url 'patients:browse_doctors' %}" class="btn btn-sm btn-outline-secondary">View All</a>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-column gap-3">
+                        {% for doctor in featured_doctors %}
+                        <div class="d-flex align-items-center p-3 rounded hover-bg-light border transition-base">
+                            <div class="doctor-avatar mb-0 me-3" style="width: 50px; height: 50px; font-size: 1.2rem;">
+                                {{ doctor.user.first_name.0 }}{{ doctor.user.last_name.0 }}
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0 fw-bold">Dr. {{ doctor.user.get_full_name }}</h6>
+                                <small class="text-primary">{{ doctor.get_specialization_display }}</small>
+                            </div>
+                            <a href="{% url 'patients:doctor_detail' doctor.id %}"
+                                class="btn btn-sm btn-outline-primary rounded-pill">
+                                Book
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mt-5">
+        <h4 class="mb-4">Quick Actions</h4>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <a href="{% url 'patients:browse_doctors' %}" class="card text-decoration-none h-100">
+                    <div class="card-body text-center py-4">
+                        <div class="stat-icon primary mx-auto mb-3">
+                            <i class="fas fa-search-plus"></i>
+                        </div>
+                        <h5 class="mb-2">Find a Doctor</h5>
+                        <p class="text-muted mb-0 small">Search by specialization</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{% url 'patients:profile_setup' %}" class="card text-decoration-none h-100">
+                    <div class="card-body text-center py-4">
+                        <div class="stat-icon secondary mx-auto mb-3">
+                            <i class="fas fa-file-medical"></i>
+                        </div>
+                        <h5 class="mb-2">Medical Profile</h5>
+                        <p class="text-muted mb-0 small">Update your medical history</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{% url 'patients:my_appointments' %}" class="card text-decoration-none h-100">
+                    <div class="card-body text-center py-4">
+                        <div class="stat-icon accent mx-auto mb-3">
+                            <i class="fas fa-list-ul"></i>
+                        </div>
+                        <h5 class="mb-2">History</h5>
+                        <p class="text-muted mb-0 small">View past appointments</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

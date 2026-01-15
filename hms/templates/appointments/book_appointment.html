@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirm Booking - HMS{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-lg border-0 rounded-2xl overflow-hidden">
+                <div class="card-header bg-primary text-white p-4 text-center">
+                    <h4 class="mb-0 fw-bold">Confirm Your Booking</h4>
+                    <p class="mb-0 opacity-75">Please review the details below</p>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <!-- Doctor Summary -->
+                    <div class="d-flex align-items-center mb-4 pb-4 border-bottom">
+                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3 flex-shrink-0"
+                            style="width: 60px; height: 60px; font-size: 1.5rem;">
+                            {{ doctor.user.first_name.0 }}{{ doctor.user.last_name.0 }}
+                        </div>
+                        <div>
+                            <h5 class="mb-1">Dr. {{ doctor.user.get_full_name }}</h5>
+                            <p class="text-primary mb-0 small fw-bold">{{ doctor.get_specialization_display }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Slot Details -->
+                    <div class="bg-light rounded-xl p-4 mb-4">
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <label class="text-muted small text-uppercase fw-bold mb-1">Date</label>
+                                <div class="fw-bold fs-5">{{ slot.date|date:"D, M d, Y" }}</div>
+                            </div>
+                            <div class="col-6">
+                                <label class="text-muted small text-uppercase fw-bold mb-1">Time</label>
+                                <div class="fw-bold fs-5 text-primary">{{ slot.start_time|time:"g:i A" }}</div>
+                            </div>
+                            <div class="col-6">
+                                <label class="text-muted small text-uppercase fw-bold mb-1">Fee</label>
+                                <div class="fw-bold">₹{{ doctor.consultation_fee }}</div>
+                            </div>
+                            <div class="col-6">
+                                <label class="text-muted small text-uppercase fw-bold mb-1">Duration</label>
+                                <div class="fw-bold">{{ slot.duration_minutes }} Mins</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Booking Form -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Reason for Visit <span
+                                    class="text-muted fw-normal">(Optional)</span></label>
+                            <textarea name="reason" class="form-control" rows="3"
+                                placeholder="Briefly describe your symptoms or reason for consultation..."></textarea>
+                        </div>
+
+                        <div class="alert alert-info d-flex align-items-start small">
+                            <i class="fas fa-info-circle mt-1 me-2 flex-shrink-0"></i>
+                            <div>
+                                By clicking confirm, you agree to the consultation fee. A confirmation email will be
+                                sent to <strong>{{ request.user.email }}</strong>.
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                Confirm Booking
+                            </button>
+                            <a href="{% url 'patients:doctor_detail' doctor.id %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
