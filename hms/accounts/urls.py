@@ -1,16 +1,13 @@
-"""
-URL configuration for accounts app.
-"""
 from django.urls import path
+from rest_framework_simplejwt.views import TokenRefreshView
+
 from . import views
 
-app_name = 'accounts'
+
 
 urlpatterns = [
-    path('', views.home_view, name='home'),
-    path('signup/', views.SignUpView.as_view(), name='signup'),
-    path('login/', views.CustomLoginView.as_view(), name='login'),
-    path('logout/', views.logout_view, name='logout'),
-    path('dashboard/', views.dashboard_view, name='dashboard'),
-    path('profile/', views.profile_view, name='profile'),
+    path('register/', views.RegisterView.as_view(), name='register'),
+    path('login/', views.LoginView.as_view(), name='login'),
+    path('login/refresh/', TokenRefreshView.as_view(), name='login-refresh'),
+    path('me/',     views.MeView.as_view(), name='me'),
 ]

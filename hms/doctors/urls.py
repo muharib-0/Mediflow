@@ -1,17 +1,14 @@
-"""
-URL configuration for doctors app.
-"""
 from django.urls import path
-from . import views
 
-app_name = 'doctors'
+from . import api_views
+
 
 urlpatterns = [
-    path('dashboard/', views.dashboard, name='dashboard'),
-    path('profile/setup/', views.profile_setup, name='profile_setup'),
-    path('availability/', views.availability_list, name='availability_list'),
-    path('availability/add/', views.add_availability, name='add_availability'),
-    path('availability/bulk-add/', views.bulk_add_availability, name='bulk_add_availability'),
-    path('availability/<int:slot_id>/delete/', views.delete_availability, name='delete_availability'),
-    path('appointments/', views.my_appointments, name='my_appointments'),
+    path('', api_views.DoctorListView.as_view(), name='doctor-list'),
+    path('dashboard/', api_views.DoctorDashboardView.as_view(), name='doctor-dashboard'),
+    path('availability/', api_views.PublicAvailabilityListView.as_view(), name='availability-list'),
+    path('me/profile/', api_views.MyDoctorProfileView.as_view(), name='my-doctor-profile'),
+    path('me/availability/', api_views.MyAvailabilityListCreateView.as_view(), name='my-availability-list'),
+    path('me/availability/<int:pk>/', api_views.MyAvailabilityDetailView.as_view(), name='my-availability-detail'),
+    path('<int:pk>/', api_views.DoctorDetailView.as_view(), name='doctor-detail'),
 ]

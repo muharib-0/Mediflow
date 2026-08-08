@@ -8,11 +8,16 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('accounts.urls')),
-    path('doctors/', include('doctors.urls')),
-    path('patients/', include('patients.urls')),
-    path('appointments/', include('appointments.urls')),
+    # calendar_integration stays template/redirect-based even after the
+    # React migration — Google's OAuth flow needs a real browser redirect,
+    # not a JWT fetch call.
     path('calendar/', include('calendar_integration.urls')),
+    # JSON API for the React frontend
+    path('api/accounts/', include('accounts.urls')),
+    path('api/doctors/', include('doctors.urls')),
+    path('api/patients/', include('patients.urls')),
+    path('api/appointments/', include('appointments.urls')),
+    path('api/calendar/', include('calendar_integration.urls')),
 ]
 
 # Serve media files in development

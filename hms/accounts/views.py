@@ -1,114 +1,57 @@
 """
-Views for user authentication and account management.
+API views for accounts: register, JWT login (with user info attached),
+and the "who am I" endpoint the React app calls on load / after refresh.
 """
-import requests
-from django.shortcuts import render, redirect
-from django.contrib.auth import login, logout
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.views import LoginView
-from django.contrib import messages
-from django.views.generic import CreateView
-from django.urls import reverse_lazy
-from django.conf import settings
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .forms import SignUpForm, LoginForm, UserProfileForm
-from .models import User
+from .serializer import RegisterSerializer, UserSerializer
 
 
-class SignUpView(CreateView):
-    """Handle user registration."""
-    
-    model = User
-    form_class = SignUpForm
-    template_name = 'accounts/signup.html'
-    success_url = reverse_lazy('accounts:login')
-    
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        user = self.object
-        
-        # Send welcome email via serverless function
-        try:
-            self._send_welcome_email(user)
-        except Exception as e:
-            print(f"Failed to send welcome email: {e}")
-        
-        messages.success(
-            self.request, 
-            f'Account created successfully! Welcome, {user.first_name}. Please log in.'
+class RegisterView(generics.CreateAPIView):
+    """POST /api/accounts/register/"""
+    permission_classes = [permissions.AllowAny]
+    serializer_class = RegisterSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response(
+            {'user': UserSerializer(user).data, 'message': 'Registration successful. Please log in.'},
+            status=status.HTTP_201_CREATED,
         )
-        return response
-    
-    def _send_welcome_email(self, user):
-        """Send welcome email via serverless email service."""
-        try:
-            payload = {
-                'action': 'SIGNUP_WELCOME',
-                'to_email': user.email,
-                'user_name': user.get_full_name() or user.email,
-                'role': user.role
-            }
-            response = requests.post(
-                settings.EMAIL_SERVICE_URL,
-                json=payload,
-                timeout=5
-            )
-            response.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            print(f"Email service error: {e}")
 
 
-class CustomLoginView(LoginView):
-    """Custom login view with styled form."""
-    
-    form_class = LoginForm
-    template_name = 'accounts/login.html'
-    redirect_authenticated_user = True
-    
-    def get_success_url(self):
-        return reverse_lazy('accounts:dashboard')
-    
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        messages.success(self.request, f'Welcome back, {self.request.user.first_name}!')
-        return response
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """Adds role/email claims and echoes the user object in the login response."""
+
+    username_field = 'email'
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data['user'] = UserSerializer(self.user).data
+        return data
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['role'] = user.role
+        token['email'] = user.email
+        return token
 
 
-@login_required
-def dashboard_view(request):
-    """Redirect to appropriate dashboard based on user role."""
-    if request.user.is_doctor:
-        return redirect('doctors:dashboard')
-    elif request.user.is_patient:
-        return redirect('patients:dashboard')
-    else:
-        return redirect('accounts:profile')
+class LoginView(TokenObtainPairView):
+    """POST /api/accounts/login/ -> { access, refresh, user }"""
+    serializer_class = CustomTokenObtainPairSerializer
 
 
-@login_required
-def profile_view(request):
-    """User profile view and update."""
-    if request.method == 'POST':
-        form = UserProfileForm(request.POST, request.FILES, instance=request.user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Profile updated successfully!')
-            return redirect('accounts:profile')
-    else:
-        form = UserProfileForm(instance=request.user)
-    
-    return render(request, 'accounts/profile.html', {'form': form})
+class MeView(APIView):
+    """GET /api/accounts/me/ returns the authenticated user."""
+    permission_classes = [permissions.IsAuthenticated]
 
-
-def logout_view(request):
-    """Handle user logout."""
-    logout(request)
-    messages.info(request, 'You have been logged out successfully.')
-    return redirect('accounts:login')
-
-
-def home_view(request):
-    """Home page view."""
-    if request.user.is_authenticated:
-        return redirect('accounts:dashboard')
-    return render(request, 'accounts/home.html')
+    def get(self, request):
+        return Response(UserSerializer(request.user).data)
