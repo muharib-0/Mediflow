@@ -1,10 +1,10 @@
 import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { api } from '../api/client';
-import Alert from '../components/Alert';
-import DoctorCard from '../components/DoctorCard';
-import PageHeader from '../components/PageHeader';
-import { getErrorMessage, unwrapResults } from '../utils/errors';
+import { api } from '../../api/client';
+import Alert from '../../components/Alert';
+import DoctorCard from '../../components/DoctorCard';
+import PageHeader from '../../components/PageHeader';
+import { getErrorMessage, unwrapResults } from '../../utils/errors';
 
 const specializations = [
   ['', 'All specializations'],

@@ -9,6 +9,7 @@ urlpatterns = [
     path('availability/', api_views.PublicAvailabilityListView.as_view(), name='availability-list'),
     path('me/profile/', api_views.MyDoctorProfileView.as_view(), name='my-doctor-profile'),
     path('me/availability/', api_views.MyAvailabilityListCreateView.as_view(), name='my-availability-list'),
+    path('me/availability/bulk/', api_views.MyAvailabilityListBulkCreateView.as_view(), name='my-availability-bulk-create'),
     path('me/availability/<int:pk>/', api_views.MyAvailabilityDetailView.as_view(), name='my-availability-detail'),
     path('<int:pk>/', api_views.DoctorDetailView.as_view(), name='doctor-detail'),
 ]

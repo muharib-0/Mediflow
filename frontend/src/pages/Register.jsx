@@ -24,13 +24,22 @@ export default function Register() {
   const [submitting, setSubmitting] = useState(false);
 
   function updateField(field, value) {
-    setForm((current) => ({
-      ...current,
-      [field]: value,
-      username: field === 'email' && !current.username ? value : current.username,
-    }));
-  }
-
+  setForm((current) => {
+    // 1. First, create the new state with the updated field
+    const nextForm = { 
+      ...current, 
+      [field]: value 
+    };
+    
+    // 2. Then, only apply the auto-fill magic if they are typing in the email field 
+    // and haven't set a username yet
+    if (field === 'email' && !current.username) {
+      nextForm.username = value;
+    }
+    
+    return nextForm;
+  });
+}
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');

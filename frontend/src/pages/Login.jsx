@@ -12,16 +12,35 @@ export default function Login() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  async function handleSubmit(event) {
+async function handleSubmit(event) {
     event.preventDefault();
     setError('');
     setSubmitting(true);
 
     try {
+      // login() must return the user object containing 'role' and 'has_profile'
       const user = await login(form);
+      
+      // If the user was trying to access a specific page before being forced to log in, save it
       const requestedPath = location.state?.from?.pathname;
-      const destination = requestedPath === '/profile/setup' ? requestedPath : '/profile/setup';
-      navigate(destination, { replace: true, state: { from: location.state?.from, loggedInRole: user.role } });
+
+      // Dynamic routing based on role and profile completion
+      if (user.role === 'doctor') {
+        if (user.has_profile) {
+          // Send to their requested page, or default to their dashboard
+          navigate(requestedPath || '/doctors/dashboard', { replace: true });
+        } else {
+          navigate('/doctor/setup', { replace: true });
+        }
+      } else {
+        // Default to patient
+        if (user.has_profile) {
+          navigate(requestedPath || '/dashboard', { replace: true });
+        } else {
+          navigate('/setup', { replace: true });
+        }
+      }
+      
     } catch (err) {
       setError(getErrorMessage(err, 'Could not log in. Check your email and password.'));
     } finally {

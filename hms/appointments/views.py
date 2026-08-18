@@ -15,10 +15,10 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts.permissions import IsAppointmentOwner, IsPatient
+from accounts.permissions import IsAppointmentOwner, IsDoctor, IsPatient
 from doctors.models import Availability
 from .models import Appointment
-from .serializers import AppointmentSerializer, BookAppointmentSerializer
+from .serializers import AppointmentSerializer, BookAppointmentSerializer, DoctorPatientDetailSerializer
 from .services import send_booking_confirmation_email
 
 
@@ -105,6 +105,21 @@ class AppointmentDetailView(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated, IsAppointmentOwner]
     serializer_class = AppointmentSerializer
     queryset = Appointment.objects.select_related('patient', 'availability', 'availability__doctor')
+
+
+class AppointmentPatientDetailView(APIView):
+    """Doctors may view medical details only for patients booked with them."""
+    permission_classes = [permissions.IsAuthenticated, IsDoctor]
+
+    def get(self, request, appointment_id):
+        appointment = get_object_or_404(
+            Appointment.objects.select_related(
+                'patient', 'patient__patient_profile', 'availability', 'availability__doctor'
+            ),
+            id=appointment_id,
+            availability__doctor=request.user,
+        )
+        return Response(DoctorPatientDetailSerializer(appointment).data)
 
 
 class CancelAppointmentView(APIView):

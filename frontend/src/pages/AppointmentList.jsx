@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import Alert from '../components/Alert';
 import PageHeader from '../components/PageHeader';
@@ -77,6 +78,11 @@ export default function AppointmentList() {
                 <button className="btn-secondary text-red-700" onClick={() => cancelAppointment(appointment.id)}>
                   Cancel
                 </button>
+              )}
+              {user.role === 'doctor' && (
+                <Link className="btn-secondary" to={`/doctor/appointments/${appointment.id}/patient`}>
+                  View patient details
+                </Link>
               )}
             </article>
           ))
