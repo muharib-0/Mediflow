@@ -27,17 +27,19 @@ export default function Layout() {
           </Link>
 
           <div className="flex flex-wrap items-center gap-2">
-            <NavLink to="/doctors" className={navLinkClass}>
-              <Search size={16} />
-              Doctors
-            </NavLink>
+            {user?.role !== 'doctor' && (
+              <NavLink to="/doctors" className={navLinkClass}>
+                <Search size={16} />
+                Doctors
+              </NavLink>
+            )}
             {!user && (
               <NavLink to="/" className={navLinkClass}>
                 Home
               </NavLink>
             )}
             {user && (
-              <NavLink to={user.role === 'doctor' ? '/doctor/availability' : '/dashboard'} className={navLinkClass}>
+              <NavLink to={user.role === 'doctor' ? '/doctor/dashboard' : '/dashboard'} className={navLinkClass}>
                 <Stethoscope size={16} />
                 {user.role === 'doctor' ? 'Workspace' : 'My Profile'}
               </NavLink>
@@ -48,16 +50,11 @@ export default function Layout() {
                 Symptom Checker
               </NavLink>
             )}
-            {user?.role === 'patient' && (
+            {/* {user?.role === 'patient' && (
               <NavLink to="/profile/setup" className={navLinkClass}>
                 Profile Setup
               </NavLink>
-            )}
-            {user?.role === 'doctor' && (
-              <NavLink to="/profile/setup" className={navLinkClass}>
-                Doctor Profile
-              </NavLink>
-            )}
+            )} */}
             {user && (
               <NavLink to="/appointments" className={navLinkClass}>
                 Appointments

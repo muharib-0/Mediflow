@@ -1,6 +1,8 @@
 """
 Models for doctor profiles and availability slots.
 """
+from datetime import datetime
+
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -113,15 +115,25 @@ class Availability(models.Model):
         self.full_clean()
         super().save(*args, **kwargs)
     
+    @classmethod
+    def delete_expired_slots(cls, doctor=None):
+        """Delete slots whose scheduled time has already passed."""
+        queryset = cls.objects.all() if doctor is None else cls.objects.filter(doctor=doctor)
+        now = timezone.localtime()
+        queryset.filter(
+            models.Q(date__lt=now.date())
+            | models.Q(date=now.date(), end_time__lte=now.time())
+        ).delete()
+
     @property
     def is_in_future(self):
         """Check if the slot is in the future."""
-        now = timezone.now()
+        now = timezone.localtime()
         slot_datetime = timezone.make_aware(
-            timezone.datetime.combine(self.date, self.start_time)
+            datetime.combine(self.date, self.start_time), timezone.get_current_timezone()
         )
         return slot_datetime > now
-    
+
     @property
     def is_available(self):
         """Check if the slot is available for booking."""

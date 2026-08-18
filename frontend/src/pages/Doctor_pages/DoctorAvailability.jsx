@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react';
-import { api } from '../api/client';
-import Alert from '../components/Alert';
-import PageHeader from '../components/PageHeader';
-import { getErrorMessage, unwrapResults } from '../utils/errors';
+import { api } from '../../api/client';
+import Alert from '../../components/Alert';
+import PageHeader from '../../components/PageHeader';
+import { getErrorMessage, unwrapResults } from '../../utils/errors';
 
 const emptySlot = { date: '', start_time: '', end_time: '' };
+const emptyBulkSlot = { date: '', start_time: '', end_time: '', slot_duration: '30' };
 
 export default function DoctorAvailability() {
   const [slots, setSlots] = useState([]);
   const [singleSlot, setSingleSlot] = useState(emptySlot);
-  const [bulkText, setBulkText] = useState('');
+  const [bulkSlot, setBulkSlot] = useState(emptyBulkSlot);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -57,21 +58,12 @@ export default function DoctorAvailability() {
     setMessage('');
 
     try {
-      const slotsPayload = bulkText
-        .split('\n')
-        .map((line) => line.trim())
-        .filter(Boolean)
-        .map((line) => {
-          const [date, start_time, end_time] = line.split(',').map((part) => part.trim());
-          return { date, start_time, end_time };
-        });
-
-      const { data } = await api.post('/api/doctors/me/availability/bulk/', { slots: slotsPayload });
-      setBulkText('');
-      setMessage(`Created ${data.created_count} slot(s). ${data.error_count ? `${data.error_count} row(s) had errors.` : ''}`);
+      const { data } = await api.post('/api/doctors/me/availability/bulk/', bulkSlot);
+      setBulkSlot(emptyBulkSlot);
+      setMessage(`Created ${data.created_count} slot(s).${data.skipped_count ? ` ${data.skipped_count} existing or overlapping slot(s) skipped.` : ''}`);
       await loadSlots();
     } catch (err) {
-      setError(getErrorMessage(err, 'Could not add bulk slots. Use: YYYY-MM-DD,HH:MM,HH:MM'));
+      setError(getErrorMessage(err, 'Could not generate availability slots. Check the selected date and times.'));
     } finally {
       setSubmitting(false);
     }
@@ -92,7 +84,7 @@ export default function DoctorAvailability() {
 
   return (
     <>
-      <PageHeader title="Doctor availability" subtitle="Create single slots or paste several rows for bulk creation." />
+      <PageHeader title="Doctor availability" subtitle="Create one slot or generate a complete schedule from a date and time range." />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="card">
@@ -117,18 +109,32 @@ export default function DoctorAvailability() {
         </section>
 
         <section className="card">
-          <h2 className="text-lg font-bold">Bulk add</h2>
-          <p className="mt-1 text-sm text-slate-600">One slot per line: YYYY-MM-DD,HH:MM,HH:MM</p>
-          <form onSubmit={createBulkSlots} className="mt-4 space-y-3">
-            <textarea
-              className="field min-h-32 font-mono"
-              placeholder={'2026-08-05,09:00,09:30\n2026-08-05,09:30,10:00'}
-              value={bulkText}
-              onChange={(event) => setBulkText(event.target.value)}
-              required
-            />
+          <h2 className="text-lg font-bold">Generate multiple slots</h2>
+          <p className="mt-1 text-sm text-slate-600">Select a working period and appointment length. We create every slot automatically.</p>
+          <form onSubmit={createBulkSlots} className="mt-4 grid gap-4 sm:grid-cols-2">
+            <label>
+              <span className="mb-1 block text-sm font-medium">Date</span>
+              <input className="field" type="date" value={bulkSlot.date} onChange={(e) => setBulkSlot({ ...bulkSlot, date: e.target.value })} required />
+            </label>
+            <label>
+              <span className="mb-1 block text-sm font-medium">Appointment length</span>
+              <select className="field" value={bulkSlot.slot_duration} onChange={(e) => setBulkSlot({ ...bulkSlot, slot_duration: e.target.value })}>
+                <option value="15">15 minutes</option>
+                <option value="30">30 minutes</option>
+                <option value="45">45 minutes</option>
+                <option value="60">60 minutes</option>
+              </select>
+            </label>
+            <label>
+              <span className="mb-1 block text-sm font-medium">From</span>
+              <input className="field" type="time" value={bulkSlot.start_time} onChange={(e) => setBulkSlot({ ...bulkSlot, start_time: e.target.value })} required />
+            </label>
+            <label>
+              <span className="mb-1 block text-sm font-medium">Until</span>
+              <input className="field" type="time" value={bulkSlot.end_time} onChange={(e) => setBulkSlot({ ...bulkSlot, end_time: e.target.value })} required />
+            </label>
             <button className="btn-primary w-full" disabled={submitting}>
-              Add bulk slots
+              Generate slots
             </button>
           </form>
         </section>

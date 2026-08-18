@@ -37,9 +37,21 @@ export function AuthProvider({ children }) {
 
   const login = async ({ email, password }) => {
     const { data } = await api.post('/api/accounts/login/', { email, password });
+    const authUser = data.user
+      ? {
+          ...data.user,
+          role: data.user.role ?? data.role,
+          has_profile: data.user.has_profile ?? data.has_profile,
+        }
+      : {
+          ...data,
+          role: data.role,
+          has_profile: data.has_profile,
+        };
+
     setTokens({ access: data.access, refresh: data.refresh });
-    setUser(data.user);
-    return data.user;
+    setUser(authUser);
+    return authUser;
   };
 
   const register = async (payload) => {
