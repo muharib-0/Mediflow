@@ -17,8 +17,12 @@ from rest_framework.views import APIView
 
 from accounts.permissions import IsAppointmentOwner, IsDoctor, IsPatient
 from doctors.models import Availability
-from .models import Appointment
-from .serializers import AppointmentSerializer, BookAppointmentSerializer, DoctorPatientDetailSerializer
+from .models import Appointment, AppointmentPrescription
+from .serializers import (
+    AppointmentPrescriptionSerializer,
+    AppointmentSerializer, BookAppointmentSerializer,
+    DoctorPatientDetailSerializer, MarkAppointmentStatusSerializer,
+)
 from .services import send_booking_confirmation_email
 
 
@@ -120,6 +124,138 @@ class AppointmentPatientDetailView(APIView):
             availability__doctor=request.user,
         )
         return Response(DoctorPatientDetailSerializer(appointment).data)
+
+
+class MarkAppointmentStatusView(APIView):
+    """POST /api/appointments/<id>/status/  body: { "status": "checked_in|in_progress|completed|no_show", "notes": "..." }
+
+    Doctor-only. The appointment lifecycle supports being checked in before
+    consultation, then set to ongoing/in-progress, and finally completed or no-show.
+    """
+    permission_classes = [permissions.IsAuthenticated, IsDoctor]
+
+    def post(self, request, appointment_id):
+        appointment = get_object_or_404(
+            Appointment.objects.select_related('availability', 'availability__doctor'),
+            id=appointment_id,
+            availability__doctor=request.user,
+        )
+
+        if appointment.status == 'cancelled':
+            return Response(
+                {'detail': 'Cannot update a cancelled appointment.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = MarkAppointmentStatusSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        new_status = serializer.validated_data['status']
+        notes = serializer.validated_data['notes']
+
+        allowed_progression = ['confirmed', 'checked_in', 'in_progress', 'completed', 'no_show']
+        if appointment.status not in allowed_progression:
+            return Response(
+                {'detail': f"Cannot update status from '{appointment.status}'."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if new_status == 'completed' and appointment.availability.is_in_future:
+            return Response(
+                {'detail': 'This appointment has not happened yet.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if new_status == 'no_show' and appointment.availability.is_in_future:
+            return Response(
+                {'detail': 'This appointment cannot be marked as no-show before the scheduled time passes.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        appointment.status = new_status
+        if notes:
+            appointment.notes = notes
+        appointment.save()
+
+        return Response(AppointmentSerializer(appointment).data)
+
+
+class AppointmentPrescriptionView(APIView):
+    """POST /api/appointments/<id>/prescription/ to create a prescription for a visit."""
+    permission_classes = [permissions.IsAuthenticated, IsDoctor]
+
+    def post(self, request, appointment_id):
+        appointment = get_object_or_404(
+            Appointment.objects.select_related('patient', 'availability', 'availability__doctor'),
+            id=appointment_id,
+            availability__doctor=request.user,
+        )
+
+        if appointment.status not in ['confirmed', 'checked_in', 'in_progress', 'completed']:
+            return Response(
+                {'detail': 'A prescription can only be created for an active or completed appointment.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        diagnosis = request.data.get('diagnosis', '').strip()
+        notes = request.data.get('notes', '').strip()
+        medications = request.data.get('medications', [])
+
+        if not diagnosis and not notes and not medications:
+            return Response(
+                {'detail': 'Provide at least a diagnosis, notes, or medication list.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        prescription = AppointmentPrescription.objects.create(
+            appointment=appointment,
+            doctor=request.user,
+            patient=appointment.patient,
+            diagnosis=diagnosis,
+            notes=notes,
+            medications=medications,
+        )
+
+        return Response(AppointmentPrescriptionSerializer(prescription).data, status=status.HTTP_201_CREATED)
+
+
+class PatientAppointmentHistoryView(APIView):
+    """GET /api/appointments/<id>/history/ shows prior clinical history for that patient."""
+    permission_classes = [permissions.IsAuthenticated, IsDoctor]
+
+    def get(self, request, appointment_id):
+        appointment = get_object_or_404(
+            Appointment.objects.select_related('patient', 'availability', 'availability__doctor'),
+            id=appointment_id,
+            availability__doctor=request.user,
+        )
+
+        history = Appointment.objects.filter(
+            patient=appointment.patient,
+        ).exclude(id=appointment.id).select_related('availability', 'availability__doctor').order_by('-availability__date', '-availability__start_time')
+
+        data = []
+        for past_appointment in history:
+            prescription = getattr(past_appointment, 'prescription', None)
+            data.append({
+                'appointment_id': past_appointment.id,
+                'date': past_appointment.date,
+                'start_time': past_appointment.start_time,
+                'end_time': past_appointment.end_time,
+                'status': past_appointment.status,
+                'reason': past_appointment.reason,
+                'notes': past_appointment.notes,
+                'diagnosis': prescription.diagnosis if prescription else '',
+                'prescription': {
+                    'id': prescription.id,
+                    'diagnosis': prescription.diagnosis,
+                    'notes': prescription.notes,
+                    'medications': prescription.medications,
+                } if prescription else None,
+            })
+
+        return Response({
+            'patient_name': appointment.patient.get_full_name(),
+            'history': data,
+        })
 
 
 class CancelAppointmentView(APIView):

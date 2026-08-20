@@ -2,8 +2,35 @@ from datetime import date
 
 from rest_framework import serializers
 
-from .models import Appointment
+from .models import Appointment, AppointmentPrescription
 from patients.models import PatientProfile
+
+
+class MedicationEntrySerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=150)
+    dosage = serializers.CharField(max_length=50)
+    frequency = serializers.CharField(max_length=100)
+    duration = serializers.CharField(max_length=50, required=False, allow_blank=True, default='')
+    instructions = serializers.CharField(max_length=200, required=False, allow_blank=True, default='')
+
+
+class AppointmentPrescriptionSerializer(serializers.ModelSerializer):
+    medications = MedicationEntrySerializer(many=True)
+
+    class Meta:
+        model = AppointmentPrescription
+        fields = [
+            'id',
+            'appointment',
+            'doctor',
+            'patient',
+            'diagnosis',
+            'notes',
+            'medications',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'doctor', 'patient', 'created_at', 'updated_at']
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
@@ -14,12 +41,14 @@ class AppointmentSerializer(serializers.ModelSerializer):
     date = serializers.DateField(read_only=True)
     start_time = serializers.TimeField(read_only=True)
     end_time = serializers.TimeField(read_only=True)
+    prescription = serializers.SerializerMethodField()
 
     class Meta:
         model = Appointment
         fields = [
             'id', 'status', 'reason', 'notes',
             'doctor_name', 'patient_name', 'date', 'start_time', 'end_time',
+            'prescription',
             'created_at', 'cancelled_at',
         ]
         read_only_fields = fields
@@ -27,12 +56,25 @@ class AppointmentSerializer(serializers.ModelSerializer):
     def get_doctor_name(self, obj):
         return f"Dr. {obj.doctor.get_full_name()}"
 
+    def get_prescription(self, obj):
+        prescription = getattr(obj, 'prescription', None)
+        if not prescription:
+            return None
+        return AppointmentPrescriptionSerializer(prescription).data
+
 
 class BookAppointmentSerializer(serializers.Serializer):
     """Input for POST /api/appointments/book/<slot_id>/ — the slot itself
     comes from the URL, this just carries the patient-supplied reason."""
 
     reason = serializers.CharField(required=False, allow_blank=True, default='')
+
+
+class MarkAppointmentStatusSerializer(serializers.Serializer):
+    """Input for POST /api/appointments/<id>/status/ — doctor-only."""
+
+    status = serializers.ChoiceField(choices=['confirmed', 'checked_in', 'in_progress', 'completed', 'no_show'])
+    notes = serializers.CharField(required=False, allow_blank=True, default='')
 
 
 class DoctorPatientDetailSerializer(serializers.Serializer):

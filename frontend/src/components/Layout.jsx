@@ -61,9 +61,14 @@ export default function Layout() {
               </NavLink>
             )}
             {user?.role === 'doctor' && (
-              <NavLink to="/doctor/availability" className={navLinkClass}>
-                Availability
-              </NavLink>
+              <>
+                <NavLink to="/appointments" className={navLinkClass}>
+                  Patient History
+                </NavLink>
+                <NavLink to="/doctor/availability" className={navLinkClass}>
+                  Availability
+                </NavLink>
+              </>
             )}
             {!user ? (
               <>

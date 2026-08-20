@@ -10,9 +10,11 @@ class Appointment(models.Model):
     
     STATUS_CHOICES = [
         ('confirmed', 'Confirmed'),
-        ('cancelled', 'Cancelled'),
+        ('checked_in', 'Checked In'),
+        ('in_progress', 'In Progress'),
         ('completed', 'Completed'),
         ('no_show', 'No Show'),
+        ('cancelled', 'Cancelled'),
     ]
     
     patient = models.ForeignKey(
@@ -78,3 +80,35 @@ class Appointment(models.Model):
         # Free up the availability slot
         self.availability.is_booked = False
         self.availability.save()
+
+
+class AppointmentPrescription(models.Model):
+    """Prescription created for a completed or in-progress consultation."""
+
+    appointment = models.OneToOneField(
+        Appointment,
+        on_delete=models.CASCADE,
+        related_name='prescription',
+    )
+    doctor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='issued_prescriptions',
+    )
+    patient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='prescriptions',
+    )
+    diagnosis = models.TextField(blank=True)
+    notes = models.TextField(blank=True)
+    medications = models.JSONField(default=list, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'appointment_prescriptions'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Prescription for {self.patient.get_full_name()} on {self.appointment.date}"
