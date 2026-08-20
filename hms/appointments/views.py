@@ -20,7 +20,7 @@ from doctors.models import Availability
 from .models import Appointment, AppointmentPrescription
 from .serializers import (
     AppointmentPrescriptionSerializer,
-    AppointmentSerializer, BookAppointmentSerializer,
+    AppointmentSerializer, BookAppointmentSerializer, DoctorPatientHistorySerializer,
     DoctorPatientDetailSerializer, MarkAppointmentStatusSerializer,
 )
 from .services import send_booking_confirmation_email
@@ -103,6 +103,44 @@ class MyAppointmentsView(generics.ListAPIView):
         if user.is_doctor:
             return base.filter(availability__doctor=user)
         return base.filter(patient=user)
+
+
+class DoctorPatientHistoryListView(generics.ListAPIView):
+    """GET /api/appointments/patient-history/ -- doctor's clinical history."""
+
+    permission_classes = [permissions.IsAuthenticated, IsDoctor]
+    serializer_class = DoctorPatientHistorySerializer
+
+    def get_queryset(self):
+        queryset = Appointment.objects.filter(
+            availability__doctor=self.request.user,
+        ).exclude(
+            status__in=['cancelled', 'no_show'],
+        ).select_related(
+            'patient', 'availability', 'availability__doctor', 'prescription',
+        ).order_by('-availability__date', '-availability__start_time')
+
+        patient = self.request.query_params.get('patient', '').strip()
+        status_filter = self.request.query_params.get('status', '').strip()
+        date_from = self.request.query_params.get('date_from', '').strip()
+        date_to = self.request.query_params.get('date_to', '').strip()
+
+        if patient:
+            queryset = queryset.filter(
+                patient__first_name__icontains=patient,
+            ) | queryset.filter(
+                patient__last_name__icontains=patient,
+            ) | queryset.filter(
+                patient__email__icontains=patient,
+            )
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        if date_from:
+            queryset = queryset.filter(availability__date__gte=date_from)
+        if date_to:
+            queryset = queryset.filter(availability__date__lte=date_to)
+
+        return queryset.distinct()
 
 
 class AppointmentDetailView(generics.RetrieveAPIView):

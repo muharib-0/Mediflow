@@ -51,11 +51,19 @@ class Medication(models.Model):
     )
     
     patient = models.ForeignKey(PatientProfile, on_delete=models.CASCADE, related_name='medications')
+    # Links a prescription back to the visit it came from. Nullable so
+    # existing rows (created before this field existed, or any future
+    # historical/manual entries) don't break — but new prescriptions from
+    # doctors always set this.
+    appointment = models.ForeignKey(
+        'appointments.Appointment', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='prescriptions',
+    )
     name = models.CharField(max_length=100)
     dosage = models.CharField(max_length=50) # e.g., "500mg"
     frequency = models.CharField(max_length=100) # e.g., "Twice daily with meals"
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
-    prescribed_by = models.CharField(max_length=100) # Could be a ForeignKey to Doctor model later
+    prescribed_by = models.CharField(max_length=100) # Doctor's display name, set automatically from the appointment
     date_prescribed = models.DateField(auto_now_add=True)
 
     def __str__(self):

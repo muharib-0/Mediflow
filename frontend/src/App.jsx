@@ -8,6 +8,7 @@ import DoctorDetail from './pages/Doctor_pages/DoctorDetail';
 import DoctorDashboard from './pages/Doctor_pages/DoctorDashboard';
 import DoctorList from './pages/Doctor_pages/DoctorList';
 import PatientDetail from './pages/Doctor_pages/PatientDetail';
+import PatientHistory from './pages/Doctor_pages/PatientHistory';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import PatientDashboard from './pages/patients_pages/PatientDashboard';
@@ -79,6 +80,10 @@ export default function App() {
               <DoctorAvailability />
             </ProtectedRoute>
           }
+        />
+        <Route
+          path="/doctor/patient-history"
+          element={<ProtectedRoute role="doctor"><PatientHistory /></ProtectedRoute>}
         />
         <Route
           path="/doctor/appointments/:appointmentId/patient"

@@ -7,6 +7,7 @@ from . import views
 urlpatterns = [
     path('book/<int:slot_id>/',    views.BookAppointmentView.as_view(), name='book'),
     path('mine/', views.MyAppointmentsView.as_view(), name='mine'),
+    path('patient-history/', views.DoctorPatientHistoryListView.as_view(), name='patient-history'),
     path('<int:appointment_id>/patient/', views.AppointmentPatientDetailView.as_view(), name='patient-detail'),
     path('<int:appointment_id>/status/', views.MarkAppointmentStatusView.as_view(), name='mark-status'),
     path('<int:appointment_id>/prescription/', views.AppointmentPrescriptionView.as_view(), name='prescription-create'),

@@ -128,3 +128,30 @@ class BookingApiTests(TestCase):
         self.assertEqual(len(response.data['history']), 1)
         self.assertEqual(response.data['history'][0]['appointment_id'], previous_appointment.id)
         self.assertEqual(response.data['history'][0]['reason'], 'Follow-up consultation')
+
+    def test_doctor_patient_history_supports_database_filters(self):
+        second_patient = get_user_model().objects.create_user(
+            email='second-patient@example.com', username='second-patient@example.com',
+            password='safe-password-123', role='patient', first_name='Asha', last_name='Khan',
+        )
+        second_slot = Availability.objects.create(
+            doctor=self.doctor,
+            date=timezone.localdate() + timedelta(days=2),
+            start_time='11:00',
+            end_time='11:30',
+        )
+        Appointment.objects.create(
+            patient=second_patient,
+            availability=second_slot,
+            reason='Headache consultation',
+            status='completed',
+        )
+
+        self.client.force_authenticate(self.doctor)
+
+        response = self.client.get('/api/appointments/patient-history/?patient=Asha&status=completed')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['patient_name'], 'Asha Khan')
+        self.assertEqual(response.data['results'][0]['reason'], 'Headache consultation')

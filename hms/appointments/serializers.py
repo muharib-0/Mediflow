@@ -63,6 +63,25 @@ class AppointmentSerializer(serializers.ModelSerializer):
         return AppointmentPrescriptionSerializer(prescription).data
 
 
+class DoctorPatientHistorySerializer(serializers.ModelSerializer):
+    """Clinical history rows scoped to the requesting doctor."""
+
+    patient_name = serializers.CharField(source='patient.get_full_name', read_only=True)
+    patient_email = serializers.EmailField(source='patient.email', read_only=True)
+    date = serializers.DateField(read_only=True)
+    start_time = serializers.TimeField(read_only=True)
+    end_time = serializers.TimeField(read_only=True)
+    prescription = AppointmentPrescriptionSerializer(read_only=True)
+
+    class Meta:
+        model = Appointment
+        fields = [
+            'id', 'patient_name', 'patient_email', 'date', 'start_time', 'end_time',
+            'status', 'reason', 'notes', 'prescription',
+        ]
+        read_only_fields = fields
+
+
 class BookAppointmentSerializer(serializers.Serializer):
     """Input for POST /api/appointments/book/<slot_id>/ — the slot itself
     comes from the URL, this just carries the patient-supplied reason."""

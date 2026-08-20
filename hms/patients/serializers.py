@@ -10,9 +10,11 @@ class HealthMetricSerializer(serializers.ModelSerializer):
         fields = ['id', 'date', 'weight_lbs', 'bmi']
 
 class MedicationSerializer(serializers.ModelSerializer):
+    appointment_id = serializers.IntegerField(source='appointment.id', read_only=True, default=None)
+
     class Meta:
         model = Medication
-        fields = ['id', 'name', 'dosage', 'frequency', 'status', 'prescribed_by', 'date_prescribed']
+        fields = ['id', 'name', 'dosage', 'frequency', 'status', 'prescribed_by', 'date_prescribed', 'appointment_id']
 
 class PatientProfileSerializer(serializers.ModelSerializer):
     # Flatten user data into the profile response for convenience

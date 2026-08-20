@@ -274,17 +274,14 @@ class HealthMetricViewSet(viewsets.ModelViewSet):
         serializer.save(patient=profile)
 
 
-class MedicationViewSet(viewsets.ModelViewSet):
+class MedicationViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Endpoint for viewing prescriptions.
-    (Creation is typically restricted to Doctors, but kept open here for testing).
+    Read-only for patients — viewing their own prescriptions.
+    Creating a prescription is a doctor action tied to a specific
+    appointment; see appointments.views.PrescribeMedicationView.
     """
     serializer_class = MedicationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return Medication.objects.filter(patient__user=self.request.user)
-
-    def perform_create(self, serializer):
-        profile = PatientProfile.objects.get(user=self.request.user)
-        serializer.save(patient=profile)
