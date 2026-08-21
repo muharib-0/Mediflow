@@ -1,4 +1,4 @@
-import { CalendarDays, ClipboardList, Clock3, Eye, Search } from 'lucide-react';
+import { CalendarDays, Clock3, Eye, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api/client';
@@ -88,7 +88,12 @@ export default function PatientHistory() {
             <article key={visit.id} className="card">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-800">{visit.patient_name || 'Unnamed patient'}</h2>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-lg font-semibold text-slate-800">{visit.patient_name || 'Unnamed patient'}</h2>
+                    <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold capitalize text-slate-700">
+                      {visit.status.replace('_', ' ')}
+                    </span>
+                  </div>
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-500">
                     <span className="inline-flex items-center gap-1"><CalendarDays size={15} /> {visit.date}</span>
                     <span className="inline-flex items-center gap-1"><Clock3 size={15} /> {visit.start_time} - {visit.end_time}</span>
@@ -99,26 +104,6 @@ export default function PatientHistory() {
                   View details
                 </Link>
               </div>
-
-              <div className="mt-4 grid gap-3 border-t border-slate-100 pt-4 md:grid-cols-2">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Reason</p>
-                  <p className="mt-1 text-sm text-slate-700">{visit.reason || 'Not recorded'}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Prescription</p>
-                  <p className="mt-1 text-sm text-slate-700">
-                    {visit.prescription?.diagnosis || (visit.prescription ? 'Prescription recorded' : 'Not recorded')}
-                  </p>
-                </div>
-              </div>
-
-              {visit.prescription?.medications?.length > 0 && (
-                <div className="mt-3 flex items-start gap-2 text-sm text-slate-700">
-                  <ClipboardList size={16} className="mt-0.5 shrink-0 text-slate-500" />
-                  <span>{visit.prescription.medications.map((med) => med.name).join(', ')}</span>
-                </div>
-              )}
             </article>
           ))}
         </section>

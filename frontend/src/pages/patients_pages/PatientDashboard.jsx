@@ -60,7 +60,7 @@ export default function PatientDashboard() {
         chronic_conditions: editFormData.chronic_conditions.split(',').map(item => item.trim()).filter(Boolean),
       };
       
-      await api.post('/api/patient/profile/', payload);
+      await api.post('/api/patients/profile/', payload);
       setIsEditing(false);
       fetchDashboardData();
     } catch (err) {

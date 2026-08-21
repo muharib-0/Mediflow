@@ -117,8 +117,18 @@ class Availability(models.Model):
     
     @classmethod
     def delete_expired_slots(cls, doctor=None):
-        """Delete slots whose scheduled time has already passed."""
-        queryset = cls.objects.all() if doctor is None else cls.objects.filter(doctor=doctor)
+        """Delete UNBOOKED slots whose scheduled time has already passed.
+
+        Booked slots are explicitly excluded — an Appointment has a
+        OneToOneField(..., on_delete=CASCADE) to this model, so deleting a
+        booked slot silently deletes the appointment (and its prescription)
+        with it. That was the actual bug: past appointments and patient
+        history were disappearing together because this method was wiping
+        out real medical records, not just clearing calendar clutter.
+        """
+        queryset = cls.objects.filter(is_booked=False)
+        if doctor is not None:
+            queryset = queryset.filter(doctor=doctor)
         now = timezone.localtime()
         queryset.filter(
             models.Q(date__lt=now.date())

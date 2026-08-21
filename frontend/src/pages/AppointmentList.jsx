@@ -16,6 +16,7 @@ export default function AppointmentList() {
   const [prescriptionDrafts, setPrescriptionDrafts] = useState({});
   const [updatingId, setUpdatingId] = useState(null);
   const [prescribingId, setPrescribingId] = useState(null);
+  const [expandedId, setExpandedId] = useState(null); // which card's prescription form is open
 
   async function loadAppointments() {
     setLoading(true);
@@ -33,6 +34,14 @@ export default function AppointmentList() {
   useEffect(() => {
     loadAppointments();
   }, []);
+
+  // Completed/no-show visits move to the Patient History page — this list
+  // is for the doctor's active/upcoming workload, not a record archive.
+  // Patients still see their own completed visits here (no separate
+  // history page exists for them).
+  const visibleAppointments = appointments.filter(
+    (a) => user.role !== 'doctor' || !['completed', 'no_show'].includes(a.status)
+  );
 
   async function cancelAppointment(appointmentId) {
     setError('');
@@ -138,6 +147,7 @@ export default function AppointmentList() {
       });
 
       setMessage('Prescription saved successfully.');
+      setExpandedId(null);
       await loadAppointments();
     } catch (err) {
       setError(getErrorMessage(err, 'Could not save prescription.'));
@@ -159,13 +169,15 @@ export default function AppointmentList() {
 
         {loading ? (
           <p className="text-slate-600">Loading appointments...</p>
-        ) : appointments.length ? (
-          appointments.map((appointment) => {
+        ) : visibleAppointments.length ? (
+          visibleAppointments.map((appointment) => {
             const doctorActions = user.role === 'doctor' ? getDoctorActions(appointment) : [];
+            const canPrescribe = user.role === 'doctor' && ['checked_in', 'in_progress', 'completed'].includes(appointment.status);
+            const isExpanded = expandedId === appointment.id;
 
             return (
-              <article key={appointment.id} className="card flex flex-col gap-4">
-                <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+              <article key={appointment.id} className="card flex flex-col gap-3">
+                <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="font-bold">
@@ -177,41 +189,34 @@ export default function AppointmentList() {
                     </div>
                     <p className="mt-1 text-sm text-slate-600">
                       {appointment.date} • {appointment.start_time} – {appointment.end_time}
+                      {appointment.reason && <> • {appointment.reason}</>}
                     </p>
-                    {appointment.reason && <p className="mt-2 text-sm text-slate-600">Reason: {appointment.reason}</p>}
-                    {appointment.notes && <p className="mt-2 text-sm text-slate-600">Notes: {appointment.notes}</p>}
-                    {appointment.prescription && (
-                      <div className="mt-3 rounded border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
-                        <p className="font-semibold">Prescription</p>
-                        <p className="mt-1">Diagnosis: {appointment.prescription.diagnosis || 'Not recorded'}</p>
-                        {appointment.prescription.notes && <p>Notes: {appointment.prescription.notes}</p>}
-                        {appointment.prescription.medications?.length > 0 && (
-                          <ul className="mt-2 list-disc pl-5">
-                            {appointment.prescription.medications.map((med, idx) => (
-                              <li key={idx}>
-                                {med.name} {med.dosage} • {med.frequency} • {med.duration}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    )}
                   </div>
 
-                  {user.role === 'patient' && appointment.status !== 'cancelled' && (
-                    <button className="btn-secondary text-red-700" onClick={() => cancelAppointment(appointment.id)}>
-                      Cancel
-                    </button>
-                  )}
-                  {user.role === 'doctor' && (
-                    <Link className="btn-secondary" to={`/doctor/appointments/${appointment.id}/patient`}>
-                      View patient details
-                    </Link>
-                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {user.role === 'patient' && appointment.status !== 'cancelled' && (
+                      <button className="btn-secondary text-red-700" onClick={() => cancelAppointment(appointment.id)}>
+                        Cancel
+                      </button>
+                    )}
+                    {user.role === 'doctor' && (
+                      <Link className="btn-secondary" to={`/doctor/appointments/${appointment.id}/patient`}>
+                        View patient details
+                      </Link>
+                    )}
+                    {canPrescribe && (
+                      <button
+                        className="btn-secondary"
+                        onClick={() => setExpandedId(isExpanded ? null : appointment.id)}
+                      >
+                        {appointment.prescription ? 'View/edit prescription' : 'Add prescription'}
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {doctorActions.length > 0 && (
-                  <div className="flex flex-col gap-2 border-t border-slate-100 pt-4 md:flex-row md:items-center">
+                  <div className="flex flex-col gap-2 border-t border-slate-100 pt-3 md:flex-row md:items-center">
                     <input
                       type="text"
                       placeholder="Visit notes (optional)"
@@ -234,9 +239,32 @@ export default function AppointmentList() {
                   </div>
                 )}
 
-                {user.role === 'doctor' && ['confirmed', 'checked_in', 'in_progress', 'completed'].includes(appointment.status) && (
-                  <div className="border-t border-slate-100 pt-4">
-                    <p className="mb-2 font-medium text-slate-700">Prescription</p>
+                {/* Everything below is hidden until the doctor explicitly asks
+                    for it — this is the "click for details" behavior instead
+                    of dumping notes/prescription text into every card. */}
+                {isExpanded && canPrescribe && (
+                  <div className="border-t border-slate-100 pt-3">
+                    {appointment.notes && (
+                      <p className="mb-3 text-sm text-slate-600">Visit notes: {appointment.notes}</p>
+                    )}
+                    {appointment.prescription && (
+                      <div className="mb-4 rounded border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
+                        <p className="font-semibold">Current prescription</p>
+                        <p className="mt-1">Diagnosis: {appointment.prescription.diagnosis || 'Not recorded'}</p>
+                        {appointment.prescription.notes && <p>Notes: {appointment.prescription.notes}</p>}
+                        {appointment.prescription.medications?.length > 0 && (
+                          <ul className="mt-2 list-disc pl-5">
+                            {appointment.prescription.medications.map((med, idx) => (
+                              <li key={idx}>{med.name} {med.dosage} • {med.frequency} • {med.duration}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+
+                    <p className="mb-2 font-medium text-slate-700">
+                      {appointment.prescription ? 'Update prescription' : 'Write prescription'}
+                    </p>
                     <div className="grid gap-2 md:grid-cols-2">
                       <input
                         type="text"
@@ -245,10 +273,7 @@ export default function AppointmentList() {
                         value={prescriptionDrafts[appointment.id]?.diagnosis || ''}
                         onChange={(e) => setPrescriptionDrafts((prev) => ({
                           ...prev,
-                          [appointment.id]: {
-                            ...(prev[appointment.id] || {}),
-                            diagnosis: e.target.value,
-                          },
+                          [appointment.id]: { ...(prev[appointment.id] || {}), diagnosis: e.target.value },
                         }))}
                       />
                       <textarea
@@ -258,10 +283,7 @@ export default function AppointmentList() {
                         value={prescriptionDrafts[appointment.id]?.notes || ''}
                         onChange={(e) => setPrescriptionDrafts((prev) => ({
                           ...prev,
-                          [appointment.id]: {
-                            ...(prev[appointment.id] || {}),
-                            notes: e.target.value,
-                          },
+                          [appointment.id]: { ...(prev[appointment.id] || {}), notes: e.target.value },
                         }))}
                       />
                       <textarea
@@ -271,10 +293,7 @@ export default function AppointmentList() {
                         value={prescriptionDrafts[appointment.id]?.medications || ''}
                         onChange={(e) => setPrescriptionDrafts((prev) => ({
                           ...prev,
-                          [appointment.id]: {
-                            ...(prev[appointment.id] || {}),
-                            medications: e.target.value,
-                          },
+                          [appointment.id]: { ...(prev[appointment.id] || {}), medications: e.target.value },
                         }))}
                       />
                     </div>

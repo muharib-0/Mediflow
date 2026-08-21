@@ -268,7 +268,7 @@ class PatientAppointmentHistoryView(APIView):
 
         history = Appointment.objects.filter(
             patient=appointment.patient,
-        ).exclude(id=appointment.id).select_related('availability', 'availability__doctor').order_by('-availability__date', '-availability__start_time')
+        ).select_related('availability', 'availability__doctor').order_by('-availability__date', '-availability__start_time')
 
         data = []
         for past_appointment in history:
